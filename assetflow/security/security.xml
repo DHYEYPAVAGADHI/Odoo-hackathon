@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             CATEGORY
+        ═══════════════════════════════════════════════════════════════════ -->
+        <record id="module_category_assetflow" model="ir.module.category">
+            <field name="name">AssetFlow</field>
+            <field name="description">Enterprise Asset and Resource Management</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+             GROUPS
+        ═══════════════════════════════════════════════════════════════════ -->
+        <record id="group_assetflow_employee" model="res.groups">
+            <field name="name">Employee</field>
+            <field name="category_id" ref="module_category_assetflow"/>
+            <field name="comment">Can view assets, create bookings, and view own allocations.</field>
+        </record>
+
+        <record id="group_assetflow_dept_head" model="res.groups">
+            <field name="name">Department Head</field>
+            <field name="category_id" ref="module_category_assetflow"/>
+            <field name="implied_ids" eval="[(4, ref('group_assetflow_employee'))]"/>
+            <field name="comment">All Employee rights plus ability to approve allocations within their department.</field>
+        </record>
+
+        <record id="group_assetflow_manager" model="res.groups">
+            <field name="name">Manager</field>
+            <field name="category_id" ref="module_category_assetflow"/>
+            <field name="implied_ids" eval="[(4, ref('group_assetflow_dept_head'))]"/>
+            <field name="comment">All Dept Head rights plus maintenance approval and audit management.</field>
+        </record>
+
+        <record id="group_assetflow_admin" model="res.groups">
+            <field name="name">Admin</field>
+            <field name="category_id" ref="module_category_assetflow"/>
+            <field name="implied_ids" eval="[(4, ref('group_assetflow_manager'))]"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+            <field name="comment">Full CRUD access to all AssetFlow records including configuration.</field>
+        </record>
+
+    </data>
+</odoo>

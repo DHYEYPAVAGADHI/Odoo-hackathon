@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         ORGANIZATION SETUP — 3-TAB ADMIN SCREEN
+         Tab A: Department Management
+         Tab B: Asset Category Management
+         Tab C: Employee Directory
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- ─── DEPARTMENT VIEWS ────────────────────────────────────────────── -->
+    <record id="view_assetflow_department_list" model="ir.ui.view">
+        <field name="name">assetflow.department.list</field>
+        <field name="model">assetflow.department</field>
+        <field name="arch" type="xml">
+            <tree string="Departments" decoration-muted="not active">
+                <field name="name"/>
+                <field name="parent_id" optional="show"/>
+                <field name="department_head_id"/>
+                <field name="asset_count" string="Assets"/>
+                <field name="employee_count" string="Employees"/>
+                <field name="active" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_assetflow_department_form" model="ir.ui.view">
+        <field name="name">assetflow.department.form</field>
+        <field name="model">assetflow.department</field>
+        <field name="arch" type="xml">
+            <form string="Department">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-archive"
+                                type="object" name="action_open_assets">
+                            <field name="asset_count" widget="statinfo" string="Assets"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Department Name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="parent_id"/>
+                            <field name="department_head_id"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Department description, scope, responsibilities..."/>
+                    <field name="child_ids" string="Sub-Departments">
+                        <tree>
+                            <field name="name"/>
+                            <field name="department_head_id"/>
+                            <field name="asset_count"/>
+                        </tree>
+                    </field>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_assetflow_department" model="ir.actions.act_window">
+        <field name="name">Departments</field>
+        <field name="res_model">assetflow.department</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'active_test': False}</field>
+    </record>
+
+    <!-- ─── CATEGORY VIEWS ──────────────────────────────────────────────── -->
+    <record id="view_assetflow_category_list" model="ir.ui.view">
+        <field name="name">assetflow.category.list</field>
+        <field name="model">assetflow.category</field>
+        <field name="arch" type="xml">
+            <tree string="Asset Categories">
+                <field name="name"/>
+                <field name="warranty_period" string="Warranty (Months)"/>
+                <field name="asset_count" string="Assets"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_assetflow_category_kanban" model="ir.ui.view">
+        <field name="name">assetflow.category.kanban</field>
+        <field name="model">assetflow.category</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_small_column" quick_create="false">
+                <field name="name"/>
+                <field name="warranty_period"/>
+                <field name="asset_count"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click oe_kanban_color_#{record.color.raw_value}">
+                            <strong><field name="name"/></strong>
+                            <div class="text-muted mt-1">
+                                <i class="fa fa-shield me-1"/>
+                                <field name="warranty_period"/> months warranty
+                            </div>
+                            <div class="mt-1">
+                                <span class="badge text-bg-primary">
+                                    <field name="asset_count"/> assets
+                                </span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_assetflow_category_form" model="ir.ui.view">
+        <field name="name">assetflow.category.form</field>
+        <field name="model">assetflow.category</field>
+        <field name="arch" type="xml">
+            <form string="Asset Category">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Category Name (e.g. Electronics, Furniture)"/></h1>
+                    </div>
+                    <group>
+                        <field name="warranty_period" string="Default Warranty (Months)"/>
+                        <field name="color" widget="color_picker"/>
+                        <field name="asset_count" string="Total Assets" readonly="1"/>
+                        <field name="active"/>
+                    </group>
+                    <field name="description" placeholder="Optional notes about this category..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_assetflow_category" model="ir.actions.act_window">
+        <field name="name">Asset Categories</field>
+        <field name="res_model">assetflow.category</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <!-- ─── EMPLOYEE DIRECTORY VIEWS (Admin: promote roles) ─────────────── -->
+    <record id="view_assetflow_employee_list" model="ir.ui.view">
+        <field name="name">assetflow.employee.list</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" eval="False"/>
+        <field name="arch" type="xml">
+            <tree string="Employee Directory"
+                  decoration-info="assetflow_role == 'manager'"
+                  decoration-warning="assetflow_role == 'dept_head'"
+                  decoration-danger="assetflow_role == 'admin'">
+                <field name="name"/>
+                <field name="work_email" optional="show"/>
+                <field name="assetflow_department_id" string="AF Department"/>
+                <field name="assetflow_role" widget="badge"
+                       decoration-muted="assetflow_role == 'employee'"
+                       decoration-info="assetflow_role == 'manager'"
+                       decoration-warning="assetflow_role == 'dept_head'"
+                       decoration-danger="assetflow_role == 'admin'"/>
+                <field name="employee_asset_count" string="Assets Held"/>
+                <field name="active" column_invisible="1"/>
+                <button name="action_promote_to_manager" string="→ Manager"
+                        type="object" icon="fa-arrow-up"
+                        invisible="assetflow_role in ['admin', 'manager']"
+                        groups="assetflow.group_assetflow_admin"
+                        confirm="Promote this employee to Asset Manager? They will gain booking and maintenance management access."/>
+                <button name="action_promote_to_dept_head" string="→ Dept Head"
+                        type="object" icon="fa-user-plus"
+                        invisible="assetflow_role in ['admin', 'dept_head', 'manager']"
+                        groups="assetflow.group_assetflow_admin"
+                        confirm="Promote this employee to Department Head?"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="action_assetflow_employee_directory" model="ir.actions.act_window">
+        <field name="name">Employee Directory</field>
+        <field name="res_model">hr.employee</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_assetflow_employee_list"/>
+        <field name="context">{'active_test': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No employees found</p>
+            <p>Employee accounts are created through the standard HR module. Use this directory to assign AssetFlow roles.</p>
+        </field>
+    </record>
+
+</odoo>

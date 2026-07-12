@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAINTENANCE — LIST VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_maintenance_list" model="ir.ui.view">
+        <field name="name">assetflow.maintenance.list</field>
+        <field name="model">assetflow.maintenance</field>
+        <field name="arch" type="xml">
+            <tree string="Maintenance Requests"
+                  decoration-danger="priority == '3'"
+                  decoration-warning="priority == '2'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="asset_id"/>
+                <field name="priority" widget="priority"/>
+                <field name="technician_id" widget="many2one_avatar_user"/>
+                <field name="reported_by_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="scheduled_date" optional="show"/>
+                <field name="actual_cost" optional="show" widget="monetary"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state == 'pending'"
+                       decoration-info="state in ['approved', 'in_progress']"
+                       decoration-success="state == 'resolved'"
+                       decoration-danger="state == 'cancelled'"/>
+                <button name="action_approve" string="Approve"
+                        type="object" icon="fa-thumbs-up"
+                        invisible="state != 'pending'"
+                        groups="assetflow.group_assetflow_manager"/>
+                <button name="action_resolve" string="Resolve"
+                        type="object" icon="fa-check"
+                        invisible="state not in ['approved', 'in_progress']"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAINTENANCE — KANBAN VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_maintenance_kanban" model="ir.ui.view">
+        <field name="name">assetflow.maintenance.kanban</field>
+        <field name="model">assetflow.maintenance</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" quick_create="false">
+                <field name="name"/>
+                <field name="asset_id"/>
+                <field name="priority"/>
+                <field name="state"/>
+                <field name="technician_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="oe_kanban_details">
+                                <field name="priority" widget="priority"/>
+                                <strong><field name="name"/></strong>
+                                <div><field name="asset_id"/></div>
+                                <div class="oe_kanban_bottom_right">
+                                    <field name="technician_id" widget="many2one_avatar_user"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAINTENANCE — FORM VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_maintenance_form" model="ir.ui.view">
+        <field name="name">assetflow.maintenance.form</field>
+        <field name="model">assetflow.maintenance</field>
+        <field name="arch" type="xml">
+            <form string="Maintenance Request">
+                <header>
+                    <button name="action_approve" string="Approve"
+                            type="object" class="btn-success"
+                            invisible="state != 'pending'"
+                            groups="assetflow.group_assetflow_manager"/>
+                    <button name="action_start_work" string="Start Work"
+                            type="object" class="btn-primary"
+                            invisible="state != 'approved'"/>
+                    <button name="action_resolve" string="Mark Resolved"
+                            type="object" class="btn-info"
+                            invisible="state not in ['approved', 'in_progress']"/>
+                    <button name="action_cancel" string="Cancel"
+                            type="object" class="btn-danger"
+                            invisible="state in ['resolved', 'cancelled']"
+                            confirm="Cancel this maintenance request?"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,approved,in_progress,resolved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Asset Details">
+                            <field name="asset_id"/>
+                            <field name="priority" widget="priority"/>
+                            <field name="reported_by_id"/>
+                        </group>
+                        <group string="Assignment">
+                            <field name="technician_id"/>
+                            <field name="scheduled_date"/>
+                            <field name="resolution_date" readonly="1"
+                                   invisible="state != 'resolved'"/>
+                        </group>
+                    </group>
+                    <group string="Cost Tracking">
+                        <field name="estimated_cost" widget="monetary"/>
+                        <field name="actual_cost" widget="monetary"/>
+                    </group>
+                    <notebook>
+                        <page string="Issue Description">
+                            <field name="issue_description"
+                                   placeholder="Describe the issue in detail..."/>
+                        </page>
+                        <page string="Resolution Notes"
+                              invisible="state not in ['in_progress', 'resolved']">
+                            <field name="resolution_notes"
+                                   placeholder="Describe the fix, parts replaced, and any follow-up actions..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAINTENANCE — SEARCH
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_maintenance_search" model="ir.ui.view">
+        <field name="name">assetflow.maintenance.search</field>
+        <field name="model">assetflow.maintenance</field>
+        <field name="arch" type="xml">
+            <search string="Search Maintenance">
+                <field name="name"/>
+                <field name="asset_id"/>
+                <field name="technician_id"/>
+                <filter name="pending" string="Pending" domain="[('state','=','pending')]"/>
+                <filter name="in_progress" string="In Progress" domain="[('state','in',['approved','in_progress'])]"/>
+                <filter name="resolved" string="Resolved" domain="[('state','=','resolved')]"/>
+                <filter name="critical" string="Critical Priority" domain="[('priority','=','3')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_priority" string="Priority" context="{'group_by': 'priority'}"/>
+                    <filter name="group_technician" string="Technician" context="{'group_by': 'technician_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAINTENANCE — WINDOW ACTION
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="action_assetflow_maintenance" model="ir.actions.act_window">
+        <field name="name">Maintenance Requests</field>
+        <field name="res_model">assetflow.maintenance</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_assetflow_maintenance_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No maintenance requests</p>
+            <p>Log maintenance issues to track repairs, technician assignments, and resolution history.</p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_assetflow_transfer_wizard" model="ir.ui.view">
+        <field name="name">assetflow.transfer.wizard.form</field>
+        <field name="model">assetflow.transfer.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Request Asset Transfer">
+                <sheet>
+                    <div class="alert alert-info" role="alert">
+                        <strong>Transfer Request</strong> — This will notify your manager for approval.
+                        Once approved, the asset will be re-allocated to the new employee.
+                    </div>
+                    <group>
+                        <group string="Asset Details">
+                            <field name="asset_id" readonly="1"/>
+                            <field name="current_holder_id" readonly="1"/>
+                        </group>
+                        <group string="Transfer Details">
+                            <field name="transfer_to_employee_id"/>
+                            <field name="expected_return_date"/>
+                        </group>
+                    </group>
+                    <field name="transfer_reason" placeholder="Explain why the transfer is needed..."/>
+                </sheet>
+                <footer>
+                    <button name="action_submit_transfer" string="Submit Transfer Request"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

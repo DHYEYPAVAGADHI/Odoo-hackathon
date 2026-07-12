@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ═══ Asset Categories ══════════════════════════════════════════ -->
+        <record id="category_electronics" model="assetflow.category">
+            <field name="name">Electronics</field>
+            <field name="warranty_period">24</field>
+            <field name="description">Laptops, monitors, phones, tablets, and other electronic equipment.</field>
+            <field name="color">1</field>
+        </record>
+
+        <record id="category_furniture" model="assetflow.category">
+            <field name="name">Furniture</field>
+            <field name="warranty_period">60</field>
+            <field name="description">Desks, chairs, cabinets, and other office furniture.</field>
+            <field name="color">3</field>
+        </record>
+
+        <record id="category_vehicles" model="assetflow.category">
+            <field name="name">Vehicles</field>
+            <field name="warranty_period">36</field>
+            <field name="description">Company cars, vans, motorcycles.</field>
+            <field name="color">5</field>
+        </record>
+
+        <record id="category_meeting_rooms" model="assetflow.category">
+            <field name="name">Meeting Rooms &amp; Spaces</field>
+            <field name="warranty_period">0</field>
+            <field name="description">Bookable shared spaces and meeting rooms.</field>
+            <field name="color">10</field>
+        </record>
+
+        <record id="category_av_equipment" model="assetflow.category">
+            <field name="name">AV Equipment</field>
+            <field name="warranty_period">12</field>
+            <field name="description">Projectors, webcams, speakers, and audio-visual equipment.</field>
+            <field name="color">6</field>
+        </record>
+
+        <!-- ═══ Departments ══════════════════════════════════════════════ -->
+        <record id="dept_it" model="assetflow.department">
+            <field name="name">Information Technology</field>
+            <field name="description">IT infrastructure, software, and technical support.</field>
+        </record>
+
+        <record id="dept_hr" model="assetflow.department">
+            <field name="name">Human Resources</field>
+            <field name="description">Employee management, recruitment, and operations.</field>
+        </record>
+
+        <record id="dept_finance" model="assetflow.department">
+            <field name="name">Finance</field>
+            <field name="description">Financial planning, accounting, and treasury.</field>
+        </record>
+
+        <record id="dept_operations" model="assetflow.department">
+            <field name="name">Operations</field>
+            <field name="description">Day-to-day operational management.</field>
+        </record>
+
+        <record id="dept_sales" model="assetflow.department">
+            <field name="name">Sales &amp; Marketing</field>
+            <field name="description">Revenue generation, customer relations, and marketing.</field>
+        </record>
+
+    </data>
+</odoo>

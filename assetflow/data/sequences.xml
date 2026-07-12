@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Asset Tag Sequence: AF-0001, AF-0002, ... -->
+        <record id="sequence_assetflow_asset" model="ir.sequence">
+            <field name="name">AssetFlow Asset Tag</field>
+            <field name="code">assetflow.asset</field>
+            <field name="prefix">AF-</field>
+            <field name="padding">4</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Allocation Reference: ALLOC-0001 -->
+        <record id="sequence_assetflow_allocation" model="ir.sequence">
+            <field name="name">AssetFlow Allocation Reference</field>
+            <field name="code">assetflow.allocation</field>
+            <field name="prefix">ALLOC-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Booking Reference: BKG-0001 -->
+        <record id="sequence_assetflow_booking" model="ir.sequence">
+            <field name="name">AssetFlow Booking Reference</field>
+            <field name="code">assetflow.booking</field>
+            <field name="prefix">BKG-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Maintenance Reference: MNT-0001 -->
+        <record id="sequence_assetflow_maintenance" model="ir.sequence">
+            <field name="name">AssetFlow Maintenance Reference</field>
+            <field name="code">assetflow.maintenance</field>
+            <field name="prefix">MNT-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

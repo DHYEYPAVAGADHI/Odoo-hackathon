@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ASSET — KANBAN VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_asset_kanban" model="ir.ui.view">
+        <field name="name">assetflow.asset.kanban</field>
+        <field name="model">assetflow.asset</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column" quick_create="false">
+                <field name="name"/>
+                <field name="asset_tag"/>
+                <field name="category_id"/>
+                <field name="state"/>
+                <field name="condition"/>
+                <field name="maintenance_risk"/>
+                <field name="image"/>
+                <field name="responsible_user_id"/>
+                <field name="department_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_image">
+                                <img t-if="record.image.raw_value"
+                                     t-att-src="kanban_image('assetflow.asset', 'image', record.id.raw_value)"
+                                     class="o_image_64_cover" alt="Asset"/>
+                                <span t-else="" class="fa fa-box fa-3x text-muted"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"/>
+                                </strong>
+                                <div class="o_kanban_tags_section">
+                                    <span class="badge text-bg-secondary me-1">
+                                        <field name="asset_tag"/>
+                                    </span>
+                                    <span t-if="record.maintenance_risk.raw_value == 'high'"
+                                          class="badge text-bg-danger">
+                                        ⚠ High Risk
+                                    </span>
+                                    <span t-elif="record.maintenance_risk.raw_value == 'medium'"
+                                          class="badge text-bg-warning">
+                                        Medium Risk
+                                    </span>
+                                </div>
+                                <ul>
+                                    <li t-if="record.category_id.value">
+                                        <field name="category_id"/>
+                                    </li>
+                                    <li t-if="record.department_id.value">
+                                        <field name="department_id"/>
+                                    </li>
+                                    <li t-if="record.condition.value">
+                                        Condition: <field name="condition"/>
+                                    </li>
+                                </ul>
+                                <div class="oe_kanban_bottom_right">
+                                    <field name="responsible_user_id" widget="many2one_avatar_user"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ASSET — LIST VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_asset_list" model="ir.ui.view">
+        <field name="name">assetflow.asset.list</field>
+        <field name="model">assetflow.asset</field>
+        <field name="arch" type="xml">
+            <tree string="Assets"
+                  decoration-danger="maintenance_risk == 'high'"
+                  decoration-warning="maintenance_risk == 'medium'"
+                  decoration-muted="state in ['retired', 'disposed', 'lost']">
+                <field name="asset_tag" optional="show"/>
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="department_id"/>
+                <field name="location" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'available'"
+                       decoration-info="state == 'reserved'"
+                       decoration-warning="state == 'maintenance'"
+                       decoration-danger="state in ['lost', 'disposed']"
+                       decoration-muted="state in ['retired', 'allocated']"/>
+                <field name="condition" optional="show"/>
+                <field name="maintenance_risk" optional="show" widget="badge"
+                       decoration-danger="maintenance_risk == 'high'"
+                       decoration-warning="maintenance_risk == 'medium'"
+                       decoration-success="maintenance_risk == 'low'"/>
+                <field name="acquisition_date" optional="show"/>
+                <field name="cost" optional="show" widget="monetary"/>
+                <field name="responsible_user_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="maintenance_risk" column_invisible="1"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ASSET — FORM VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_asset_form" model="ir.ui.view">
+        <field name="name">assetflow.asset.form</field>
+        <field name="model">assetflow.asset</field>
+        <field name="arch" type="xml">
+            <form string="Asset">
+                <header>
+                    <button name="action_set_available" string="Set Available"
+                            type="object" class="btn-primary"
+                            invisible="state == 'available'"/>
+                    <button name="action_set_retired" string="Retire Asset"
+                            type="object" class="btn-secondary"
+                            invisible="state in ['retired', 'disposed']"/>
+                    <button name="action_set_disposed" string="Dispose"
+                            type="object" class="btn-danger"
+                            invisible="state == 'disposed'"
+                            confirm="This will permanently mark the asset as Disposed. Continue?"/>
+                    <button name="action_mark_lost" string="Mark as Lost"
+                            type="object" class="btn-warning"
+                            invisible="state in ['lost', 'disposed']"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="available,allocated,reserved,maintenance,retired,disposed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_allocations" type="object"
+                                class="oe_stat_button" icon="fa-user-circle">
+                            <field name="allocation_ids" widget="statinfo" string="Allocations"/>
+                        </button>
+                        <button name="action_view_bookings" type="object"
+                                class="oe_stat_button" icon="fa-calendar"
+                                invisible="not is_bookable_resource">
+                            <field name="booking_ids" widget="statinfo" string="Bookings"/>
+                        </button>
+                        <button name="action_view_maintenance" type="object"
+                                class="oe_stat_button" icon="fa-wrench">
+                            <field name="maintenance_count" widget="statinfo" string="Maintenance"/>
+                        </button>
+                    </div>
+
+                    <!-- Risk Banner -->
+                    <div class="alert alert-danger mb-0"
+                         invisible="maintenance_risk != 'high'" role="alert">
+                        <strong>⚠ High Maintenance Risk:</strong>
+                        This asset has been sent for maintenance 5 or more times.
+                        Consider scheduling a full overhaul or retirement review.
+                    </div>
+                    <div class="alert alert-warning mb-0"
+                         invisible="maintenance_risk != 'medium'" role="alert">
+                        <strong>Maintenance Risk:</strong>
+                        This asset has been maintained 3–4 times. Monitor closely.
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Asset Name"/></h1>
+                        <h3 class="text-muted">
+                            <field name="asset_tag" readonly="1"/>
+                        </h3>
+                    </div>
+
+                    <field name="image" widget="image" class="oe_avatar"/>
+
+                    <group>
+                        <group string="Classification">
+                            <field name="category_id"/>
+                            <field name="department_id"/>
+                            <field name="location"/>
+                            <field name="condition"/>
+                            <field name="is_bookable_resource"/>
+                        </group>
+                        <group string="Acquisition">
+                            <field name="serial_number"/>
+                            <field name="acquisition_date"/>
+                            <field name="cost" widget="monetary"/>
+                            <field name="warranty_expiry"/>
+                            <field name="responsible_user_id"/>
+                        </group>
+                    </group>
+
+                    <group string="Risk Assessment">
+                        <field name="maintenance_risk" widget="badge"
+                               decoration-danger="maintenance_risk == 'high'"
+                               decoration-warning="maintenance_risk == 'medium'"
+                               decoration-success="maintenance_risk == 'low'"/>
+                        <field name="maintenance_count" string="Completed Maintenance Count"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Internal notes, purchase details, vendor info..."/>
+                        </page>
+                        <page string="Audit History">
+                            <field name="audit_line_ids" readonly="1">
+                                <tree>
+                                    <field name="audit_id"/>
+                                    <field name="status" widget="badge"/>
+                                    <field name="remarks"/>
+                                    <field name="verified_by_id"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ASSET — PIVOT VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_asset_pivot" model="ir.ui.view">
+        <field name="name">assetflow.asset.pivot</field>
+        <field name="model">assetflow.asset</field>
+        <field name="arch" type="xml">
+            <pivot string="Asset Analysis">
+                <field name="category_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="cost" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ASSET — GRAPH VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_asset_graph" model="ir.ui.view">
+        <field name="name">assetflow.asset.graph</field>
+        <field name="model">assetflow.asset</field>
+        <field name="arch" type="xml">
+            <graph string="Asset Distribution" type="bar">
+                <field name="category_id" type="row"/>
+                <field name="state" type="col"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ASSET — SEARCH VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_asset_search" model="ir.ui.view">
+        <field name="name">assetflow.asset.search</field>
+        <field name="model">assetflow.asset</field>
+        <field name="arch" type="xml">
+            <search string="Search Assets">
+                <field name="name"/>
+                <field name="asset_tag"/>
+                <field name="serial_number"/>
+                <field name="category_id"/>
+                <field name="department_id"/>
+                <field name="responsible_user_id"/>
+                <filter name="available" string="Available" domain="[('state','=','available')]"/>
+                <filter name="allocated" string="Allocated" domain="[('state','=','allocated')]"/>
+                <filter name="maintenance" string="Under Maintenance" domain="[('state','=','maintenance')]"/>
+                <filter name="bookable" string="Bookable Resources" domain="[('is_bookable_resource','=',True)]"/>
+                <filter name="high_risk" string="High Risk" domain="[('maintenance_risk','=','high')]"/>
+                <separator/>
+                <filter name="archived" string="Archived" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_category" string="Category" context="{'group_by': 'category_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_department" string="Department" context="{'group_by': 'department_id'}"/>
+                    <filter name="group_condition" string="Condition" context="{'group_by': 'condition'}"/>
+                    <filter name="group_risk" string="Risk Level" context="{'group_by': 'maintenance_risk'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ASSET — WINDOW ACTION
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="action_assetflow_asset" model="ir.actions.act_window">
+        <field name="name">Assets</field>
+        <field name="res_model">assetflow.asset</field>
+        <field name="view_mode">kanban,list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_assetflow_asset_search"/>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register your first asset
+            </p>
+            <p>
+                Create asset records to start tracking your organisation's
+                equipment, vehicles, and infrastructure.
+            </p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BOOKING — CALENDAR VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_booking_calendar" model="ir.ui.view">
+        <field name="name">assetflow.booking.calendar</field>
+        <field name="model">assetflow.booking</field>
+        <field name="arch" type="xml">
+            <calendar string="Resource Bookings"
+                      date_start="start_time"
+                      date_stop="end_time"
+                      color="color"
+                      event_limit="5"
+                      quick_create="false"
+                      mode="week">
+                <field name="resource_id" filters="1" color="color"/>
+                <field name="booked_by_id"/>
+                <field name="state"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BOOKING — LIST VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_booking_list" model="ir.ui.view">
+        <field name="name">assetflow.booking.list</field>
+        <field name="model">assetflow.booking</field>
+        <field name="arch" type="xml">
+            <tree string="Bookings"
+                  decoration-danger="state == 'cancelled'"
+                  decoration-success="state == 'completed'"
+                  decoration-info="state in ['confirmed', 'in_use']">
+                <field name="name"/>
+                <field name="resource_id"/>
+                <field name="booked_by_id" widget="many2one_avatar_user"/>
+                <field name="start_time"/>
+                <field name="end_time"/>
+                <field name="duration_hours" string="Duration (h)"/>
+                <field name="state" widget="badge"
+                       decoration-muted="state == 'draft'"
+                       decoration-info="state == 'confirmed'"
+                       decoration-success="state in ['in_use', 'completed']"
+                       decoration-danger="state == 'cancelled'"/>
+                <button name="action_confirm" string="Confirm"
+                        type="object" icon="fa-check"
+                        invisible="state != 'draft'"/>
+                <button name="action_cancel" string="Cancel"
+                        type="object" icon="fa-times"
+                        invisible="state in ['completed', 'cancelled']"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BOOKING — FORM VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_booking_form" model="ir.ui.view">
+        <field name="name">assetflow.booking.form</field>
+        <field name="model">assetflow.booking</field>
+        <field name="arch" type="xml">
+            <form string="Resource Booking">
+                <header>
+                    <button name="action_confirm" string="Confirm Booking"
+                            type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_start" string="Start Use"
+                            type="object" class="btn-success"
+                            invisible="state != 'confirmed'"/>
+                    <button name="action_complete" string="Complete"
+                            type="object" class="btn-info"
+                            invisible="state != 'in_use'"/>
+                    <button name="action_cancel" string="Cancel Booking"
+                            type="object" class="btn-danger"
+                            invisible="state in ['completed', 'cancelled']"
+                            confirm="Are you sure you want to cancel this booking?"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,in_use,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Resource">
+                            <field name="resource_id"
+                                   domain="[('is_bookable_resource', '=', True), ('state', 'in', ['available', 'reserved'])]"/>
+                            <field name="booked_by_id"/>
+                            <field name="employee_id"/>
+                        </group>
+                        <group string="Time Slot">
+                            <field name="start_time" widget="daterange"
+                                   options="{'related_end_date': 'end_time'}"/>
+                            <field name="end_time" widget="daterange"
+                                   options="{'related_start_date': 'start_time'}"/>
+                            <field name="duration_hours" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="purpose" placeholder="Meeting, Event, Usage purpose..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BOOKING — SEARCH
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_booking_search" model="ir.ui.view">
+        <field name="name">assetflow.booking.search</field>
+        <field name="model">assetflow.booking</field>
+        <field name="arch" type="xml">
+            <search string="Search Bookings">
+                <field name="name"/>
+                <field name="resource_id"/>
+                <field name="booked_by_id"/>
+                <filter name="confirmed" string="Confirmed" domain="[('state','=','confirmed')]"/>
+                <filter name="in_use" string="In Use" domain="[('state','=','in_use')]"/>
+                <filter name="completed" string="Completed" domain="[('state','=','completed')]"/>
+                <filter name="cancelled" string="Cancelled" domain="[('state','=','cancelled')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_resource" string="Resource" context="{'group_by': 'resource_id'}"/>
+                    <filter name="group_user" string="Booked By" context="{'group_by': 'booked_by_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         BOOKING — WINDOW ACTIONS
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="action_assetflow_booking" model="ir.actions.act_window">
+        <field name="name">Resource Bookings</field>
+        <field name="res_model">assetflow.booking</field>
+        <field name="view_mode">list,form,calendar</field>
+        <field name="search_view_id" ref="view_assetflow_booking_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first booking</p>
+            <p>Book shared resources like meeting rooms, vehicles, and equipment with full conflict detection.</p>
+        </field>
+    </record>
+
+    <record id="action_assetflow_booking_calendar" model="ir.actions.act_window">
+        <field name="name">Booking Calendar</field>
+        <field name="res_model">assetflow.booking</field>
+        <field name="view_mode">calendar,list,form</field>
+        <field name="search_view_id" ref="view_assetflow_booking_search"/>
+        <field name="context">{'search_default_confirmed': 1}</field>
+    </record>
+
+</odoo>

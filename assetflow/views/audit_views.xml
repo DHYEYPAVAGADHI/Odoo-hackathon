@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         AUDIT — LIST VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_audit_list" model="ir.ui.view">
+        <field name="name">assetflow.audit.list</field>
+        <field name="model">assetflow.audit</field>
+        <field name="arch" type="xml">
+            <tree string="Audit Cycles"
+                  decoration-success="state == 'closed'"
+                  decoration-info="state == 'in_progress'"
+                  decoration-muted="state == 'draft'">
+                <field name="name"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="auditor_id" widget="many2one_avatar_user"/>
+                <field name="department_id" optional="show"/>
+                <field name="total_assets"/>
+                <field name="verified_count"/>
+                <field name="missing_count" decoration-danger="missing_count &gt; 0"/>
+                <field name="damaged_count" decoration-warning="damaged_count &gt; 0"/>
+                <field name="state" widget="badge"
+                       decoration-muted="state == 'draft'"
+                       decoration-info="state == 'in_progress'"
+                       decoration-success="state == 'closed'"/>
+            </tree>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         AUDIT — FORM VIEW
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_audit_form" model="ir.ui.view">
+        <field name="name">assetflow.audit.form</field>
+        <field name="model">assetflow.audit</field>
+        <field name="arch" type="xml">
+            <form string="Audit Cycle">
+                <header>
+                    <button name="action_populate_from_department" string="Auto-Populate Assets"
+                            type="object" class="btn-secondary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_start_audit" string="Start Audit"
+                            type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_close_audit" string="Close &amp; Reconcile"
+                            type="object" class="btn-success"
+                            invisible="state != 'in_progress'"
+                            confirm="This will auto-update all asset states based on audit findings and generate a discrepancy report. Continue?"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,in_progress,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Audit Cycle Name e.g. Q1 2025 IT Asset Audit"/></h1>
+                    </div>
+
+                    <group>
+                        <group string="Scope">
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="auditor_id"/>
+                            <field name="department_id"/>
+                        </group>
+                        <group string="Summary">
+                            <field name="total_assets" readonly="1"/>
+                            <field name="verified_count" readonly="1"/>
+                            <field name="missing_count" readonly="1"/>
+                            <field name="damaged_count" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Audit Lines">
+                            <field name="audit_line_ids"
+                                   readonly="state == 'closed'">
+                                <tree editable="bottom"
+                                      decoration-danger="status == 'missing'"
+                                      decoration-warning="status == 'damaged'"
+                                      decoration-success="status == 'verified'">
+                                    <field name="asset_id"/>
+                                    <field name="asset_tag" readonly="1"/>
+                                    <field name="category_id" readonly="1"/>
+                                    <field name="location" readonly="1"/>
+                                    <field name="status" widget="badge"
+                                           decoration-muted="status == 'pending'"
+                                           decoration-success="status == 'verified'"
+                                           decoration-danger="status == 'missing'"
+                                           decoration-warning="status == 'damaged'"/>
+                                    <field name="remarks"/>
+                                    <field name="verified_by_id" widget="many2one_avatar_user"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Discrepancy Report"
+                              invisible="state != 'closed'">
+                            <field name="discrepancy_summary" readonly="1" widget="html"/>
+                        </page>
+                        <page string="Notes">
+                            <field name="notes" placeholder="General audit notes, methodology, scope exclusions..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         AUDIT — SEARCH
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="view_assetflow_audit_search" model="ir.ui.view">
+        <field name="name">assetflow.audit.search</field>
+        <field name="model">assetflow.audit</field>
+        <field name="arch" type="xml">
+            <search string="Search Audits">
+                <field name="name"/>
+                <field name="auditor_id"/>
+                <field name="department_id"/>
+                <filter name="draft" string="Draft" domain="[('state','=','draft')]"/>
+                <filter name="in_progress" string="In Progress" domain="[('state','=','in_progress')]"/>
+                <filter name="closed" string="Closed" domain="[('state','=','closed')]"/>
+                <filter name="has_discrepancies" string="Has Discrepancies"
+                        domain="['|', ('missing_count', '&gt;', 0), ('damaged_count', '&gt;', 0)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_auditor" string="Auditor" context="{'group_by': 'auditor_id'}"/>
+                    <filter name="group_department" string="Department" context="{'group_by': 'department_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         AUDIT — WINDOW ACTION
+    ═══════════════════════════════════════════════════════════════ -->
+    <record id="action_assetflow_audit" model="ir.actions.act_window">
+        <field name="name">Audit Cycles</field>
+        <field name="res_model">assetflow.audit</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_assetflow_audit_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Start your first audit cycle</p>
+            <p>Run periodic asset audits to verify physical presence, update conditions, and auto-reconcile discrepancies.</p>
+        </field>
+    </record>
+
+</odoo>

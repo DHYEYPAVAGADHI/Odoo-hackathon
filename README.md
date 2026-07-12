@@ -1,2 +1,1 @@
-# Odoo-hackathon
-Team repo 
+
